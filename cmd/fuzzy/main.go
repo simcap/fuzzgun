@@ -2,18 +2,21 @@ package main
 
 import (
 	"flag"
-	"github.com/simcap/fuzzy"
 	"fmt"
 	"os"
 	"time"
+
+	"github.com/simcap/fuzzy"
 )
 
 var (
-	input string
+	input  string
+	quoted bool
 )
 
 func init() {
 	flag.StringVar(&input, "s", "", "Example string to be fuzzed")
+	flag.BoolVar(&quoted, "quoted", false, "Diplay fizz result quoted (make all chars appear)")
 }
 
 func main() {
@@ -25,7 +28,11 @@ func main() {
 
 	out := fuzzy.Fuzz(input)
 	for s := range out {
-		fmt.Println(s)
+		if quoted {
+			fmt.Printf("%q\n", s)
+		} else {
+			fmt.Println(s)
+		}
 		time.Sleep(1 * time.Second)
 	}
 }

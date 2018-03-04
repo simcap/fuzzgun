@@ -1,13 +1,28 @@
 package fuzzy
 
 import (
-	"testing"
 	"reflect"
+	"testing"
 )
+
+func TestGroup(t *testing.T) {
+	t.Skip()
+	got := group([]*token{&token{s: "1"}, &token{s: "2"}, &token{s: "3"}, &token{s: "4"}})
+	want := [][]string{
+		{"1"}, {"2"}, {"3"}, {"4"},
+		{"1", "2"}, {"2", "3"}, {"3", "4"},
+		{"1", "2", "3"}, {"2", "3", "4"},
+		{"1", "2", "3", "4"},
+	}
+
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("got\n%#v\nwant\n%#v", got, want)
+	}
+}
 
 func TestTokenize(t *testing.T) {
 	tcases := []struct {
-		in string
+		in  string
 		out []string
 	}{
 		{in: "", out: nil},
@@ -25,7 +40,7 @@ func TestTokenize(t *testing.T) {
 
 	for i, tcase := range tcases {
 		actual := tokenize(tcase.in)
-		if got, want := actual, tcase.out; !reflect.DeepEqual(got, want) {
+		if got, want := stringArr(actual), tcase.out; !reflect.DeepEqual(got, want) {
 			t.Fatalf("case %d: got %#v, want %#v", i+1, got, want)
 		}
 	}
