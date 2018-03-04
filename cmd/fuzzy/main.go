@@ -2,18 +2,28 @@ package main
 
 import (
 	"flag"
-	"github.com/simcap/fuzzy"
 	"fmt"
 	"os"
 	"time"
+
+	"context"
+	"os/signal"
+
+	"github.com/simcap/fuzzy"
 )
 
 var (
-	input string
+	input  string
+	quoted bool
+	rounds int
+	tick   time.Duration
 )
 
 func init() {
 	flag.StringVar(&input, "s", "", "Example string to be fuzzed")
+	flag.BoolVar(&quoted, "quoted", false, "Display fizz result quoted (make all chars appear)")
+	flag.IntVar(&rounds, "rounds", 0, "Number of fuzzing to perform")
+	flag.DurationVar(&tick, "tick", 500*time.Millisecond, "Ticker to display fuzz result")
 }
 
 func main() {
@@ -23,9 +33,29 @@ func main() {
 		os.Exit(1)
 	}
 
-	out := fuzzy.Fuzz(input)
-	for s := range out {
-		fmt.Println(s)
-		time.Sleep(1 * time.Second)
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer func() {
+		signal.Stop(stop)
+		cancel()
+	}()
+
+	go func() {
+		select {
+		case <-stop:
+			cancel()
+			fmt.Println("\n... emptying buffer (due to ticking)")
+		case <-ctx.Done():
+		}
+	}()
+
+	for s := range fuzzy.Fuzz(ctx, input, rounds) {
+		if quoted {
+			fmt.Printf("%q\n", s)
+		} else {
+			fmt.Println(s)
+		}
+		time.Sleep(tick)
 	}
 }
