@@ -2,37 +2,59 @@ package fuzzy
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"math"
 	"math/rand"
 	"strings"
+	"time"
 	"unicode"
 )
 
-func Fuzz(s string) (out chan string) {
-	out = make(chan string)
+func Fuzz(ctx context.Context, s string, maxIter ...int) <-chan string {
+	rand.Seed(time.Now().UnixNano())
+
+	var max int
+	if len(maxIter) > 0 {
+		max = maxIter[0]
+	}
+
+	out := make(chan string)
 	toks := tokenize(s)
-	groups := group(toks)
+	groups := group(toks, 4)
 	unique := map[string]struct{}{}
+
+	var total int
 	go func() {
 		for {
-			for _, tuple := range groups {
-				result := make([]string, len(toks))
-				src := stringArr(toks)
-				copy(result, src)
-				var c []int
-				for _, t := range tuple {
-					r := fuzz(t.s)
-					result[t.pos] = r
-					c = append(c, t.pos)
+			select {
+			default:
+				for _, tuple := range groups {
+					result := make([]string, len(toks))
+					src := stringArr(toks)
+					copy(result, src)
+					var c []int
+					for _, t := range tuple {
+						r := fuzz(t)
+						result[t.pos] = r
+						c = append(c, t.pos)
+					}
+					fuzzed := strings.Join(result, "")
+					if _, ok := unique[fuzzed]; ok {
+						continue
+					} else {
+						unique[fuzzed] = struct{}{}
+						out <- fuzzed
+						total++
+						if max > 0 && total == max {
+							close(out)
+							return
+						}
+					}
 				}
-				fuzzed := strings.Join(result, "")
-				if _, ok := unique[fuzzed]; ok {
-					continue
-				} else {
-					unique[fuzzed] = struct{}{}
-					out <- fuzzed
-				}
+			case <-ctx.Done():
+				close(out)
+				return
 			}
 		}
 	}()
@@ -40,17 +62,16 @@ func Fuzz(s string) (out chan string) {
 	return out
 }
 
-func fuzz(tok string) string {
-	r := rune(tok[0])
-	if unicode.IsLetter(rune(r)) {
-		return mutateAlpha(tok)
-	} else if isSep(r) {
-		return mutateSep(tok)
-	} else if unicode.IsDigit(r) {
-		return mutateDigit(tok)
+func fuzz(tok *token) string {
+	switch tok.typ {
+	case alpha:
+		return mutateAlpha(tok.s)
+	case digit:
+		return mutateDigit(tok.s)
+	case separator:
+		return mutateSep(tok.s)
 	}
-
-	return tok
+	return tok.s
 }
 
 type tokenType int
@@ -58,7 +79,7 @@ type tokenType int
 const (
 	alpha tokenType = iota
 	digit
-	other
+	separator
 )
 
 type token struct {
@@ -74,9 +95,16 @@ func stringArr(t []*token) (out []string) {
 	return
 }
 
-func group(tokens []*token) (groups [][]*token) {
+func group(tokens []*token, groupFactor ...int) (groups [][]*token) {
 	l := len(tokens)
-	for i := 1; i <= l; i++ {
+	factor := l
+	if len(groupFactor) > 0 {
+		factor = groupFactor[0]
+	}
+	if factor > l {
+		factor = l
+	}
+	for i := 1; i <= factor; i++ {
 		for j := 0; j+i <= l; j++ {
 			groups = append(groups, tokens[j:j+i])
 		}
@@ -138,7 +166,7 @@ func mutateDigit(s string) string {
 	return s
 }
 
-var chars = []byte{33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,58,59,60,61,62,63,64,91,92,93,94,95,96,123,124,125,126}
+var chars = []byte{33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 58, 59, 60, 61, 62, 63, 64, 91, 92, 93, 94, 95, 96, 123, 124, 125, 126}
 
 func mutateSep(s string) string {
 	switch rand.Intn(2) {
@@ -149,7 +177,7 @@ func mutateSep(s string) string {
 		case 1:
 			return ""
 		case 2:
-			return  s+s
+			return s + s
 		}
 	case 1:
 		switch rand.Intn(1) {
@@ -200,7 +228,7 @@ func tokenize(s string) (tokens []*token) {
 				b.WriteRune(r)
 				continue
 			} else {
-				tokens = append(tokens, &token{s: b.String(), typ: other})
+				tokens = append(tokens, &token{s: b.String(), typ: separator})
 				b.Reset()
 				b.WriteRune(r)
 			}
@@ -226,10 +254,10 @@ func detectTyp(s string) tokenType {
 		if unicode.IsLetter(a) {
 			return alpha
 		} else if isSep(r) {
-			return other
+			return separator
 		} else if unicode.IsDigit(r) {
 			return digit
 		}
 	}
-	return other
+	return separator
 }
