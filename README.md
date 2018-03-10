@@ -4,6 +4,8 @@
 
 Fuzzgun generates mutated, invalid, random, unexpected data and exotic format from a given input string.
 
+It can be used by developers, security tester and quality assurance teams alike.
+
 ## Usage
 
 Fuzzgun only takes a string as input. This string can be anything you want and fuzzgun will try to work its best on it.
@@ -45,7 +47,11 @@ Otherwise grab a [binary for Linux, Windows or Mac](https://github.com/simcap/fu
 Then to get started run:
 ```sh
 $ fuzzgun -h
-$ fuzzgun bob@mail.net # start to mutate something
+
+ # start to mutate some stuff
+$ fuzzgun bob@mail.net
+$ fuzzgun http://example.com
+$ fuzzgun 07/12/2016
 ```
 
 ## How it works
