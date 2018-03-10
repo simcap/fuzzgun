@@ -1,14 +1,12 @@
 package fuzzgun
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"math"
 	"math/rand"
 	"strings"
 	"time"
-	"unicode"
 )
 
 func Fuzz(ctx context.Context, s string, maxIter ...int) <-chan string {
@@ -64,28 +62,14 @@ func Fuzz(ctx context.Context, s string, maxIter ...int) <-chan string {
 
 func fuzz(tok *token) string {
 	switch tok.typ {
-	case alpha:
+	case alphaTok:
 		return mutateAlpha(tok.s)
-	case digit:
+	case numTok:
 		return mutateDigit(tok.s)
-	case separator:
+	case sepTok:
 		return mutateSep(tok.s)
 	}
 	return tok.s
-}
-
-type tokenType int
-
-const (
-	alpha tokenType = iota
-	digit
-	separator
-)
-
-type token struct {
-	pos int
-	s   string
-	typ tokenType
 }
 
 func stringArr(t []*token) (out []string) {
@@ -186,78 +170,4 @@ func mutateSep(s string) string {
 		}
 	}
 	return s
-}
-
-func isSep(r rune) bool {
-	return !unicode.IsLetter(r) && !unicode.IsDigit(r)
-}
-
-func tokenize(s string) (tokens []*token) {
-	if len(s) < 1 {
-		return
-	}
-
-	var b bytes.Buffer
-	var last rune
-	for i, r := range s {
-		if unicode.IsLetter(r) {
-			if unicode.IsLetter(last) || i == 0 {
-				last = r
-				b.WriteRune(r)
-				continue
-			} else {
-				tokens = append(tokens, &token{s: b.String(), typ: alpha})
-				b.Reset()
-				b.WriteRune(r)
-			}
-		}
-		if unicode.IsDigit(r) {
-			if unicode.IsDigit(last) || i == 0 {
-				last = r
-				b.WriteRune(r)
-				continue
-			} else {
-				tokens = append(tokens, &token{s: b.String(), typ: digit})
-				b.Reset()
-				b.WriteRune(r)
-			}
-		}
-		if isSep(r) {
-			if isSep(last) || i == 0 {
-				last = r
-				b.WriteRune(r)
-				continue
-			} else {
-				tokens = append(tokens, &token{s: b.String(), typ: separator})
-				b.Reset()
-				b.WriteRune(r)
-			}
-		}
-		last = r
-	}
-
-	if b.Len() > 0 {
-		a := b.String()
-		tokens = append(tokens, &token{s: a, typ: detectTyp(a)})
-	}
-
-	for i, tok := range tokens {
-		tok.pos = i
-	}
-
-	return
-}
-
-func detectTyp(s string) tokenType {
-	r := rune(s[0])
-	for _, a := range s {
-		if unicode.IsLetter(a) {
-			return alpha
-		} else if isSep(r) {
-			return separator
-		} else if unicode.IsDigit(r) {
-			return digit
-		}
-	}
-	return separator
 }

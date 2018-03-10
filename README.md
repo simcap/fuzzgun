@@ -2,7 +2,12 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/simcap/fuzzgun)](https://goreportcard.com/report/github.com/simcap/fuzzgun)
 [![GoDoc](https://godoc.org/github.com/simcap/fuzzgun?status.svg)](https://godoc.org/github.com/simcap/fuzzgun)
 
-Fuzzgun generates mutated, invalid, random, unexpected data and exotic format from a given input string.
+Fuzzgun generates mutated, invalid, random, unexpected data and exotic format from a given input string. 
+
+As a fuzzer Fuzzgun:
+* is black box fuzzer (unaware of internal program structure)
+* is a mutation based and aware of input structure.
+* takes a string layout as its input model
 
 It can be used by developers, security tester and quality assurance teams alike.
 
