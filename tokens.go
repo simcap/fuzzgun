@@ -3,6 +3,7 @@ package fuzzgun
 import (
 	"bytes"
 	"fmt"
+	"strings"
 	"unicode"
 	"unicode/utf8"
 )
@@ -96,4 +97,29 @@ func detectTyp(r rune) tokenType {
 		return numTok
 	}
 	return sepTok
+}
+
+func join(toks []*token) string {
+	var out []string
+	for _, t := range toks {
+		out = append(out, t.s)
+	}
+	return strings.Join(out, "")
+}
+
+func groupByShifting(tokens []*token, groupFactor ...int) (groups [][]*token) {
+	l := len(tokens)
+	factor := l
+	if len(groupFactor) > 0 {
+		factor = groupFactor[0]
+	}
+	if factor > l {
+		factor = l
+	}
+	for i := 1; i <= factor; i++ {
+		for j := 0; j+i <= l; j++ {
+			groups = append(groups, tokens[j:j+i])
+		}
+	}
+	return
 }
