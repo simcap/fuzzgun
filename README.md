@@ -10,9 +10,9 @@ Fuzzgun only takes a string as input. This string can be anything you want and f
 
 On Internet though, programs ingest structured inputs. So to harness a system the best inputs for fuzzgun will be string examples (or layouts) of what your systems is expecting.
 
-#### Library usage
+### Library usage
 
-For full usage, documentation and examples report to the [Fuzzgun Godoc](https://godoc.org/github.com/simcap/fuzzgun)
+For full usage, documentation and examples report to the [Godoc](https://godoc.org/github.com/simcap/fuzzgun)
 
 ```go
 import ( 
@@ -33,7 +33,7 @@ func main() {
 }
 ```
 
-#### CLI usage
+### CLI usage
 
 If you have [Golang](https://golang.org/dl/) (>= 1.10) installed, the following will fetch and install the CLI executable:
 ```sh
@@ -50,36 +50,34 @@ $ fuzzgun bob@mail.net # start to mutate something
 
 ## How it works
 
-Fuzzgun takes as input a string layout. A **layout** is an string example of a structured input. 
+Fuzzgun takes as input a string layout. A **layout** is an string example of a structured input. Here is the basic algorithm (of my own cooking, i.e. feedback welcome) that will be applied to the input:
 
-Here is the basic algorithm (of my own cooking, i.e. feedback welcome) that will be applied to the input:
+1. _Tokenizing_ separates the input string into either _alpha, numerical or separator_ tokens
+2. _Labelizing_ 
 
-1. **Tokenizing** separates the input string into either _alpha, numerical or separator_ tokens
-2. **Labelizing** 
+    * known types: marks the input after a successful detection of a known type: URL, IP address, Date, e-mail, etc.
+    * known encoding: marks the input after a successful detection of a known encoding: base64, URL encoding, etc.
 
-        * known types: marks the input after a successful detection of a known type: URL, IP address, Date, e-mail, etc.
-        * known encoding: marks the input after a successful detection of a known encoding: base64, URL encoding, etc.
+3. _Grouping_ extracts set of tokens using various stategy: _arrangement_, _shifting_, _separators only_, etc...
+4. _Fuzzing_ mutates the data in parallel given the different groups, labels, encoding, etc.
+5. _Generating_ will finalizes the fuzzed output putting back groups to original input; encoding the result if the input was detected encoded
 
-3. **Grouping** extracts set of tokens using various stategy: _arrangement_, _shifting_, _separators only_, etc...
-4. **Fuzzing** mutates the data in parallel given the different groups, labels, encoding, etc.
-5. **Generating** will finalizes the fuzzed output putting back groups to original input; encoding the result if the input was detected encoded
-
-#### Tokenizing 
+### Tokenizing 
 
 The input is tokenized into either _alpha, numerical or separator_. For instance "bob@mail.net" would output: "bob" (alpha), "@" (separator), "mail" (alpha), "." (separator), "net" (alpha)
 
-#### Labelizing
+### Labelizing
 
 Since structured input on the internet can easily have known format, fuzzgun will labelizes the input string according to detected format: _ip address, URL, date, unix timestamp_
 
 This will allows to mutate data according to known issues or valid but exotic formats.
 
-Simple examples would be:
+Examples:
 
 * detecting an IP address we can generates output such as: IPv6, IP overflow values, octal/hexadecimal, etc.
 * detecting an e-mail address we can generates *valid yet uncommon* e-mail addresses according to [RFC 5322](https://tools.ietf.org/html/rfc5322)
 
-#### Grouping 
+### Grouping 
 
 Grouping allows to isolate array of tokens using various strategy to be fuzzed indenpendently of others.
 
