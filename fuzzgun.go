@@ -1,4 +1,4 @@
-package fuzzy
+package fuzzgun
 
 import (
 	"bytes"

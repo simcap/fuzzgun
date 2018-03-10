@@ -50,7 +50,7 @@ func main() {
 		}
 	}()
 
-	for s := range fuzzy.Fuzz(ctx, input, rounds) {
+	for s := range fuzzgun.Fuzz(ctx, input, rounds) {
 		if quoted {
 			fmt.Printf("%q\n", s)
 		} else {
