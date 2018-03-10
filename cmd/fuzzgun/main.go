@@ -9,7 +9,7 @@ import (
 	"context"
 	"os/signal"
 
-	"github.com/simcap/fuzzy"
+	"github.com/simcap/fuzzgun"
 )
 
 var (

@@ -1,4 +1,4 @@
-Fuzzgun generates mutated, invalid, random and unexpected data from a given input string.
+Fuzzgun generates mutated, invalid, random, unexpected data and exotic format from a given input string.
 
 ## Usage
 
@@ -48,7 +48,7 @@ $ fuzzgun bob@mail.net # start to mutate something
 
 Fuzzgun takes as input a string layout. A **layout** is an string example of a structured input. 
 
-Once given a layout, here is the basic algorithm (of my own cooking, i.e. feedback welcome) that will be applied:
+Here is the basic algorithm (of my own cooking, i.e. feedback welcome) that will be applied to the input:
 
 1. **Tokenizing** separates the input string into either _alpha, numerical or separator_ tokens
 2. **Labelizing** 
