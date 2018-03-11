@@ -6,57 +6,85 @@ import (
 )
 
 type sequitur struct {
-	allRules   map[string]string
+	allRules   []string
 	finalRules []string
 	idx        int
 }
 
-func (s *sequitur) nextID() string {
-	s.idx++
-	return fmt.Sprintf("%d", s.idx)
+type symbol struct {
+	s   string
+	typ int
 }
 
-func (s *sequitur) run(input string) {
-	if s.allRules == nil {
-		s.allRules = make(map[string]string)
+func (s symbol) String() string {
+	if s.typ > 0 {
+		return fmt.Sprintf("nonterm[%s]", s.s)
+	}
+	return fmt.Sprintf("term[%s]", s.s)
+}
+
+type digram [2]symbol
+
+func stringToSymbols(s string) (out []symbol) {
+	for _, a := range s {
+		out = append(out, symbol{s: string(a), typ: 1})
+	}
+	return
+}
+
+func (seq *sequitur) parse(symbols []symbol) []symbol {
+	digrams := make(map[digram]int)
+	for i := 0; i <= len(symbols)-2; i++ {
+		var d digram
+		copy(d[:], symbols[i:i+2])
+		digrams[d]++
 	}
 
-	factor := 2
-	digrams := make(map[string]int)
-	for i := 0; i <= len(input)-factor; i++ {
-		digrams[input[i:i+factor]]++
-	}
-
-	newRules := make(map[string]string)
+	rules := make(map[digram]struct{})
 	for digram, count := range digrams {
 		if count > 1 {
-			id := s.nextID()
-			s.allRules[id] = digram
-			newRules[digram] = id
+			rules[digram] = struct{}{}
 		}
 	}
 
-	if len(newRules) < 1 {
-		for i, f := range s.finalRules {
-			new := f
-			for id, a := range s.allRules {
-				new = strings.Replace(new, id, a, -1)
+	if len(rules) < 1 {
+		return compress(symbols)
+	}
+
+	// Create new symbols replacing with rules
+	var newSymbols []symbol
+	for i := 0; i < len(symbols); {
+		if i < len(symbols)-1 {
+			slice := symbols[i : i+2]
+			var d digram
+			copy(d[:], slice)
+			if _, ok := rules[d]; ok {
+				var s []string
+				s = append(s, d[0].s, d[1].s)
+				term := symbol{typ: 0, s: strings.Join(s, "")}
+				newSymbols = append(newSymbols, term)
+				i = i + 2
+			} else {
+				newSymbols = append(newSymbols, symbols[i])
+				i++
 			}
-			s.finalRules[i] = new
-
+		} else {
+			newSymbols = append(newSymbols, symbols[i])
+			i++
 		}
-		return
 	}
 
-	s.finalRules = []string{}
-	for r := range newRules {
-		s.finalRules = append(s.finalRules, r)
-	}
+	return seq.parse(compress(newSymbols))
+}
 
-	result := input
-	for digram, id := range newRules {
-		result = strings.Replace(result, digram, id, -1)
+func compress(arr []symbol) []symbol {
+	out := make([]symbol, 0)
+	for _, s := range arr {
+		if len(out) > 0 && s == out[len(out)-1] {
+			continue
+		} else {
+			out = append(out, s)
+		}
 	}
-
-	s.run(result)
+	return out
 }

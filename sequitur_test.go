@@ -1,26 +1,24 @@
 package fuzzgun
 
 import (
-	"reflect"
 	"testing"
 )
 
-func TestSequitur(t *testing.T) {
-	tcases := []struct {
-		in  string
-		out []string
-	}{
-		{in: "a", out: nil}, {in: "ab", out: nil}, {in: "abc", out: nil},
-		{in: "abcbc", out: []string{"bc"}},
-		{in: "abaaba", out: []string{"aba"}},
-		{in: "<abc><abc>", out: []string{"<abc>"}},
+func TestDisplaySequitur(t *testing.T) {
+	tcases := []string{
+		"a", "ab", "abc",
+		"abcbc", "abaaba",
+		"aaabdaaabac", "<abc><abc>",
+		"<abc>html<abc>",
+		"the mighty the tall",
+		"2.3.2.4.",
 	}
 
-	for i, tcase := range tcases {
+	for _, s := range tcases {
 		seq := &sequitur{}
-		seq.run(tcase.in)
-		if got, want := seq.finalRules, tcase.out; !reflect.DeepEqual(got, want) {
-			t.Errorf("case %d\ngot %v\n\nwant %v\n(all rules: %s)", i+1, got, want, seq.allRules)
-		}
+		symbols := stringToSymbols(s)
+		t.Log("case", s)
+		t.Log("rules:", seq.parse(symbols))
+		t.Log()
 	}
 }
