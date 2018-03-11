@@ -1,8 +1,23 @@
 package fuzzgun
 
 import (
+	"fmt"
 	"testing"
 )
+
+func TestSequiturOnCorpus(t *testing.T) {
+	corpus := []string{
+		"http://example.com",
+		"https://example.com",
+		"http://example.com?q=10",
+		"http://example.com?q=10&v=9",
+	}
+	seq := &sequitur{}
+	symbols := stringToSymbols(corpus...)
+	fmt.Println("rules:", seq.parse(symbols))
+	fmt.Println()
+
+}
 
 func TestDisplaySequitur(t *testing.T) {
 	tcases := []string{
@@ -10,15 +25,15 @@ func TestDisplaySequitur(t *testing.T) {
 		"abcbc", "abaaba",
 		"aaabdaaabac", "<abc><abc>",
 		"<abc>html<abc>",
-		"the mighty the tall",
+		"the mighty the tall the ugly",
 		"2.3.2.4.",
 	}
 
 	for _, s := range tcases {
 		seq := &sequitur{}
 		symbols := stringToSymbols(s)
-		t.Log("case", s)
-		t.Log("rules:", seq.parse(symbols))
-		t.Log()
+		fmt.Println("case", s)
+		fmt.Println("rules:", seq.parse(symbols))
+		fmt.Println()
 	}
 }
