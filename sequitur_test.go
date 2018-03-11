@@ -13,7 +13,7 @@ func TestSequiturOnCorpus(t *testing.T) {
 		"http://example.com?q=10&v=9",
 	}
 	seq := &sequitur{}
-	symbols := stringToSymbols(corpus...)
+	symbols := stringToCorpus(corpus...)
 	fmt.Println("rules:", seq.parse(symbols))
 	fmt.Println()
 
@@ -31,9 +31,9 @@ func TestDisplaySequitur(t *testing.T) {
 
 	for _, s := range tcases {
 		seq := &sequitur{}
-		symbols := stringToSymbols(s)
+		corpus := stringToCorpus(s)
 		fmt.Println("case", s)
-		fmt.Println("rules:", seq.parse(symbols))
+		fmt.Println("rules:", seq.parse(corpus))
 		fmt.Println()
 	}
 }

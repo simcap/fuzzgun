@@ -26,26 +26,34 @@ func (s symbol) String() string {
 
 type digram [2]symbol
 
-func stringToSymbols(corpus ...string) (out []symbol) {
+func stringToCorpus(corpus ...string) (out [][]symbol) {
 	for _, c := range corpus {
+		var symbols []symbol
 		for _, a := range c {
-			out = append(out, symbol{s: string(a), typ: 1})
+			symbols = append(symbols, symbol{s: string(a), typ: 1})
 		}
+		out = append(out, symbols)
 	}
 	return
 }
 
-func (seq *sequitur) parse(symbols []symbol) []symbol {
-	rules := extractRules(symbols)
-	fmt.Println("rules", rules)
+func (seq *sequitur) parse(corpus [][]symbol) (out []symbol) {
+	rules := extractRules(corpus)
 
 	if len(rules) < 1 {
-		return compressTerminals(symbols)
+		for _, symbols := range corpus {
+			out = append(out, compressTerminals(symbols)...)
+		}
+		return out
 	}
 
-	newSymbols := replaceWithRules(symbols, rules)
+	var newCorpus [][]symbol
+	for _, symbols := range corpus {
+		newSymbols := replaceWithRules(symbols, rules)
+		newCorpus = append(newCorpus, compressTerminals(newSymbols))
+	}
 
-	return seq.parse(compressTerminals(newSymbols))
+	return seq.parse(newCorpus)
 }
 
 func replaceWithRules(symbols []symbol, rules map[digram]struct{}) (out []symbol) {
@@ -72,18 +80,20 @@ func replaceWithRules(symbols []symbol, rules map[digram]struct{}) (out []symbol
 	return
 }
 
-func extractRules(symbols []symbol) map[digram]struct{} {
+func extractRules(corpus [][]symbol) map[digram]struct{} {
 	digrams := make(map[digram]int)
-	for i := 0; i <= len(symbols)-2; i++ {
-		var d digram
-		copy(d[:], symbols[i:i+2])
-		digrams[d]++
-	}
-
 	rules := make(map[digram]struct{})
-	for digram, count := range digrams {
-		if count > 1 {
-			rules[digram] = struct{}{}
+	for _, symbols := range corpus {
+		for i := 0; i <= len(symbols)-2; i++ {
+			var d digram
+			copy(d[:], symbols[i:i+2])
+			digrams[d]++
+		}
+
+		for digram, count := range digrams {
+			if count > 1 {
+				rules[digram] = struct{}{}
+			}
 		}
 	}
 	return rules
