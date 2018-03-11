@@ -6,17 +6,27 @@ import (
 )
 
 func TestSequiturOnCorpus(t *testing.T) {
-	corpus := []string{
-		"http://example.com",
-		"https://example.com",
-		"http://example.com?q=10",
-		"http://example.com?q=10&v=9",
+	tcases := [][]string{
+		{
+			"http://example.com",
+			"https://example.com",
+			"http://example.com?q=10",
+			"http://example.com?q=10&v=9"},
+		{
+			"the tiny guy",
+			"Has the bar", "the well", "the war",
+		},
+		{
+			"<joe@mail.com>", "joe@mail.com",
+			"Joe <joe@email.com>", "joe@email.com",
+		},
 	}
-	seq := &sequitur{}
-	symbols := stringToCorpus(corpus...)
-	fmt.Println("rules:", seq.parse(symbols))
-	fmt.Println()
-
+	for _, in := range tcases {
+		seq := &sequitur{}
+		symbols := stringToCorpus(in...)
+		fmt.Println("rules:", seq.parse(symbols))
+		fmt.Println()
+	}
 }
 
 func TestDisplaySequitur(t *testing.T) {
@@ -28,11 +38,9 @@ func TestDisplaySequitur(t *testing.T) {
 		"the mighty the tall the ugly",
 		"2.3.2.4.",
 	}
-
 	for _, s := range tcases {
 		seq := &sequitur{}
 		corpus := stringToCorpus(s)
-		fmt.Println("case", s)
 		fmt.Println("rules:", seq.parse(corpus))
 		fmt.Println()
 	}
