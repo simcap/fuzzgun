@@ -44,7 +44,7 @@ func main() {
 
 If you have [Golang](https://golang.org/dl/) (>= 1.10) installed, the following will fetch and install the CLI executable:
 ```sh
-$ go get -u github.com/simcap/fuzzgun
+$ go get -u github.com/simcap/fuzzgun/...
 ```
 
 Otherwise grab a [binary for Linux, Windows or Mac](https://github.com/simcap/fuzzgun/releases)
@@ -54,9 +54,9 @@ Then to get started run:
 $ fuzzgun -h
 
  # start to mutate some stuff
-$ fuzzgun bob@mail.net
-$ fuzzgun http://example.com
-$ fuzzgun 07/12/2016
+$ fuzzgun -s bob@mail.net
+$ fuzzgun -s http://example.com
+$ fuzzgun -s 07/12/2016
 ```
 
 ## How it works
